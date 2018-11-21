@@ -15,26 +15,44 @@ import org.springframework.web.bind.annotation.RestController;
 import java.util.List;
 
 @RestController
-@RequestMapping(PaymentServiceConsts.PAYMENT_SERVICE_BASE_URI)
+@RequestMapping("/credentials")
 public class UserCredentialsController {
     @Autowired
     UserCredentialsService userCredentialsService;
 
-    @GetMapping("credentials/user/{id}")
-    public ResponseEntity<List<UserCredentials>> getUserCredentialsByUserId(@PathVariable("id") String id) {
+    @GetMapping("userid/{id}")
+    public ResponseEntity<?> getUserCredentialsByUserId(@PathVariable("id") String id) {
         List<UserCredentials> userCredentials = userCredentialsService.getByUserId(id);
+        if(userCredentials == null) {
+            return new ResponseEntity<>("no user credentials found", HttpStatus.NOT_FOUND);
+        }
         return new ResponseEntity<List<UserCredentials>>(userCredentials, HttpStatus.OK);
     }
 
-    @GetMapping("credentials/all")
-    public ResponseEntity<List<UserCredentials>> getAllPaymentMethod() {
+    @GetMapping("all")
+    public ResponseEntity<?> getAllPaymentMethod() {
         List<UserCredentials> list = userCredentialsService.getAllUserCredentials();
+        if(list == null) {
+            return new ResponseEntity<>("no user credentials found", HttpStatus.NOT_FOUND);
+        }
         return new ResponseEntity<List<UserCredentials>>(list, HttpStatus.OK);
     }
 
-    @GetMapping("credentials/name/{name}")
-    public ResponseEntity<List<UserCredentials>> getUserCredentialsByPaymentMethodId(@PathVariable("id") String id) {
+    @GetMapping("paymentmethod/{name}")
+    public ResponseEntity<?> getUserCredentialsByPaymentMethodId(@PathVariable("id") String id) {
         List<UserCredentials> userCredentials = userCredentialsService.getByPaymentMethodId(id);
+        if(userCredentials == null) {
+            return new ResponseEntity<>("no user credentials for payment method found", HttpStatus.NOT_FOUND);
+        }
+        return new ResponseEntity<List<UserCredentials>>(userCredentials, HttpStatus.OK);
+    }
+
+    @GetMapping("both/{userid}/{methodid}")
+    public ResponseEntity<?> getUserCredentialsByUserIdAndPaymentMethodId(@PathVariable("userid") String userid, @PathVariable("methodid") String methodid) {
+        List<UserCredentials> userCredentials = userCredentialsService.getByUserNameAndByPaymentMethodId(userid, methodid);
+        if(userCredentials == null) {
+            return new ResponseEntity<>("no user credentials for user id and payment method found", HttpStatus.NOT_FOUND);
+        }
         return new ResponseEntity<List<UserCredentials>>(userCredentials, HttpStatus.OK);
     }
 }

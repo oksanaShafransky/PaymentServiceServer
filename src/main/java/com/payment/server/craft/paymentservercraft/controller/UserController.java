@@ -15,31 +15,39 @@ import java.util.Map;
 import java.util.UUID;
 
 @RestController
-@RequestMapping(PaymentServiceConsts.PAYMENT_SERVICE_BASE_URI)
+@RequestMapping("/user")
 public class UserController {
     @Autowired
     UserService userService;
 
-    @GetMapping("user/{id}")
-    public ResponseEntity<User> getUserById(@PathVariable("id") String id) {
+    @GetMapping("{id}")
+    public ResponseEntity<?> getUserById(@PathVariable("id") String id) {
         User user = userService.getUserById(id);
+        if(user == null) {
+            return new ResponseEntity<>("no user found", HttpStatus.NOT_FOUND);
+        }
         return new ResponseEntity<User>(user, HttpStatus.OK);
     }
 
-    @GetMapping("user/mail/{mail}")
-    public ResponseEntity<User> getUserByMail(@PathVariable("mail") String mail) {
+    @GetMapping("mail/{mail}")
+    public ResponseEntity<?> getUserByMail(@PathVariable("mail") String mail) {
         User user = userService.getUserByMail(mail);
+        if(user == null) {
+            return new ResponseEntity<>("no usermail found", HttpStatus.NOT_FOUND);
+        }
         return new ResponseEntity<User>(user, HttpStatus.OK);
     }
 
-
-    @GetMapping("user/all")
-    public ResponseEntity<List<User>> getAllUsers() {
+    @GetMapping("all")
+    public ResponseEntity<?> getAllUsers() {
         List<User> list = userService.getAllUsers();
+        if(list == null) {
+            return new ResponseEntity<>("no user found", HttpStatus.NOT_FOUND);
+        }
         return new ResponseEntity<List<User>>(list, HttpStatus.OK);
     }
 
-    @PostMapping("user/add")
+    @PostMapping("add")
     public ResponseEntity<Void> addUser(@RequestBody Map requestBody, UriComponentsBuilder builder) {
         User user = new User();
         user.setUserid(UUID.randomUUID().toString());
@@ -54,12 +62,14 @@ public class UserController {
         headers.setLocation(builder.path("/user/{id}").buildAndExpand(user.getUserid()).toUri());
         return new ResponseEntity<Void>(headers, HttpStatus.CREATED);
     }
-    @PutMapping("user/update")
+
+    @PutMapping("update")
     public ResponseEntity<User> updateUser(@RequestBody User user) {
         userService.updateUser(user);
         return new ResponseEntity<User>(user, HttpStatus.OK);
     }
-    @DeleteMapping("user/{id}")
+
+    @DeleteMapping("{id}")
     public ResponseEntity<Void> delete(@PathVariable("id") String id) {
         userService.deleteUser(id);
         return new ResponseEntity<Void>(HttpStatus.NO_CONTENT);

@@ -14,26 +14,35 @@ import org.springframework.web.bind.annotation.RestController;
 import java.util.List;
 
 @RestController
-@RequestMapping(PaymentServiceConsts.PAYMENT_SERVICE_BASE_URI)
+@RequestMapping("/paymentmethod")
 public class PaymentMethodController {
     @Autowired
     PaymentMethodService paymentMethodService;
 
-    @GetMapping("paymentmethod/{id}")
-    public ResponseEntity<PaymentMethod> getPaymentMethodById(@PathVariable("id") String id) {
+    @GetMapping("{id}")
+    public ResponseEntity<?> getPaymentMethodById(@PathVariable("id") String id) {
         PaymentMethod method = paymentMethodService.getPaymentMethodById(id);
+        if(method == null) {
+            return new ResponseEntity<>("no payment method found", HttpStatus.NOT_FOUND);
+        }
         return new ResponseEntity<PaymentMethod>(method, HttpStatus.OK);
     }
 
-    @GetMapping("paymentmethod/all")
-    public ResponseEntity<List<PaymentMethod>> getAllPaymentMethod() {
+    @GetMapping("all")
+    public ResponseEntity<?> getAllPaymentMethod() {
         List<PaymentMethod> list = paymentMethodService.getAllPaymentMethods();
+        if(list == null) {
+            return new ResponseEntity<>("no payment method found", HttpStatus.NOT_FOUND);
+        }
         return new ResponseEntity<List<PaymentMethod>>(list, HttpStatus.OK);
     }
 
-    @GetMapping("paymentmethod/name/{name}")
-    public ResponseEntity<PaymentMethod> getPaymentMethodByName(@PathVariable("name") String name) {
+    @GetMapping("name/{name}")
+    public ResponseEntity<?> getPaymentMethodByName(@PathVariable("name") String name) {
         PaymentMethod method = paymentMethodService.getPaymentMethodByName(name);
+        if(method == null) {
+            return new ResponseEntity<>("no payment method found", HttpStatus.NOT_FOUND);
+        }
         return new ResponseEntity<PaymentMethod>(method, HttpStatus.OK);
     }
 }
