@@ -2,7 +2,9 @@ package com.payment.server.craft.paymentservercraft.controller;
 
 import com.payment.server.craft.paymentservercraft.config.KafkaSender;
 import com.payment.server.craft.paymentservercraft.exceptions.PaymentException;
+import com.payment.service.dto.beans.FailedPayment;
 import com.payment.service.dto.beans.Payment;
+import com.payment.service.dto.service.FailedPaymentService;
 import com.payment.service.dto.service.PaymentService;
 import com.payment.service.dto.utils.PaymentStatus;
 import org.slf4j.Logger;
@@ -19,58 +21,54 @@ import java.util.Map;
 import java.util.UUID;
 
 @RestController
-@RequestMapping("/payment")
-public class PaymentController {
-    private static final Logger logger = LoggerFactory.getLogger(PaymentController.class);
+@RequestMapping("/failed_payment")
+public class FailedPaymentController {
+    private static final Logger logger = LoggerFactory.getLogger(FailedPaymentController.class);
 
     @Autowired
-    private PaymentService paymentService;
-
-    @Autowired
-    private KafkaSender kafkaSender;
-
+    private FailedPaymentService paymentService;
 
     /**
-     * getPaymentById - find the payment with specific id
+     * getPaymentById - find the failed payment with specific id
      * @param id
-     * @return ResponseEntity with Payment found on db or NOT_FOUND status
+     * @return ResponseEntity with failed Payment found on db or NOT_FOUND status
      */
     @GetMapping("{id}")
-    public ResponseEntity<?> getPaymentById(@PathVariable("id") String id) {
-        Payment payment = paymentService.getPaymentById(id);
-        logger.info("getPaymentById found payment for payment id {}", id);
+    public ResponseEntity<?> getFailedPaymentById(@PathVariable("id") String id) {
+        FailedPayment payment = paymentService.getPaymentById(id);
+        logger.info("getPaymentById found payment for payment id %d", id);
         if(payment == null){
             logger.warn("getPaymentById did not found payment for payment id {}", id);
             return new ResponseEntity<>("no payment found", HttpStatus.NOT_FOUND);
         }
-        return new ResponseEntity<Payment>(payment, HttpStatus.OK);
+        return new ResponseEntity<FailedPayment>(payment, HttpStatus.OK);
     }
 
     /**
-     * getAllPayments - find all payments
+     * getAllPayments - find all failed payments
      * @param
-     * @return ResponseEntity with list of Payments found on db or NOT_FOUND status
+     * @return ResponseEntity with list of failed Payments found on db or NOT_FOUND status
      */
     @GetMapping("all")
-    public ResponseEntity<?> getPayments() {
-        List<Payment> list = paymentService.getAllPayments();
+    public ResponseEntity<?> getAllFailedPayments() {
+        List<FailedPayment> list = paymentService.getAllPayments();
         logger.info("getPayments found {} payments", list.size());
         if(list == null || list.isEmpty()){
             logger.warn("getPayments did not found any payment");
             return new ResponseEntity<>("no payments found", HttpStatus.NOT_FOUND);
         }
-        return new ResponseEntity<List<Payment>>(list, HttpStatus.OK);
+        return new ResponseEntity<List<FailedPayment>>(list, HttpStatus.OK);
     }
 
     /**
-     * addPayment - add a payment to the database
+     * addPayment - add a failed payment to the database
      * @param requestBody
      * @param builder
-     * @return new added payment or error
+     * @return new added failed payment or error
      */
     @PostMapping("add")
-    public ResponseEntity<?> addPayment(@RequestBody Map requestBody, UriComponentsBuilder builder) {
-        Payment payment = new Payment();
+    public ResponseEntity<?> addFailedPayment(@RequestBody Map requestBody, UriComponentsBuilder builder) {
+        FailedPayment payment = new FailedPayment();
         try {
             payment.setPaymentid(UUID.randomUUID().toString());
             payment.setPayeeid((String) requestBody.get("payeeid"));
@@ -99,47 +97,16 @@ public class PaymentController {
     }
 
     /**
-     * addPaymentToQueue - create a payment and put it to the kafka producer queue
-     * @param requestBody
-     * @param builder
-     * @return ResponseEntity with created payment or BAD_REQUEST status
-     */
-    @PostMapping("add_queue")
-    public ResponseEntity<?> addPaymentToQueue(@RequestBody Map requestBody, UriComponentsBuilder builder) {
-        Payment payment = new Payment();
-        try {
-            payment.setPaymentid(UUID.randomUUID().toString());
-            payment.setPayeeid((String) requestBody.get("payeeid"));
-            payment.setPayerid((String) requestBody.get("payerid"));
-            payment.setPaymentmethodid(((String) requestBody.get("paymentmethodid")));
-            payment.setAmount(Float.valueOf(requestBody.get("amount").toString()));
-            payment.setPaymentdescription((String) requestBody.get("paymentdescription"));
-            payment.setCurrency((String) requestBody.get("currency"));
-            payment.setPaymentnumber((String) requestBody.get("paymentnumber"));
-            payment.setPaymentstatus(PaymentStatus.INPROCCESS.name());
-            kafkaSender.send(payment);
-            logger.info("new payment was added to the kafka producer queue with id {}", payment.getPaymentid());
-            return new ResponseEntity<Payment>(payment, HttpStatus.CREATED);
-        } catch (PaymentException e) {
-            String errorMessage;
-            errorMessage = e + " <== error";
-            logger.error(errorMessage);
-            payment.setPaymentstatus(PaymentStatus.FAILED.name());
-            return new ResponseEntity<>(errorMessage, HttpStatus.BAD_REQUEST);
-        }
-    }
-
-    /**
-     * updatePayment - update payment with new properties
+     * updatePayment - update failed payment with new properties
      * @param payment
      * @return the updated payment or BAD_REQUEST status
      */
     @PutMapping("update")
-    public ResponseEntity<?> updatePayment(@RequestBody Payment payment) {
+    public ResponseEntity<?> updatePayment(@RequestBody FailedPayment payment) {
         try {
             paymentService.updatePayment(payment);
-            logger.info("the payment was updated successfully");
-            return new ResponseEntity<Payment>(payment, HttpStatus.OK);
+            logger.info("the payment {} was updated successfully");
+            return new ResponseEntity<FailedPayment>(payment, HttpStatus.OK);
         } catch (Exception e) {
             String errorMessage;
             errorMessage = e + " <== error";
@@ -162,34 +129,34 @@ public class PaymentController {
     }
 
     /**
-     * getPaymentsByPayeeID - find all payments received by specific payee
+     * getPaymentsByPayeeID - find all failed payments received by specific payee
      * @param id of payee
      * @return list of payments received by the payee
      */
     @GetMapping("payment/payee/{id}")
     public ResponseEntity<?> getPaymentsByPayeeId(@PathVariable("id") String id) {
-        List<Payment> list = paymentService.getAllPaymentsByPayeeId(id);
+        List<FailedPayment> list = paymentService.getAllPaymentsByPayeeId(id);
         if(list == null) {
             logger.warn("No payments for payerid {} was found", id);
             return new ResponseEntity<>("no payment for payee found", HttpStatus.NOT_FOUND);
         }
-        logger.info("It was found {} payments for payeeid {}", list.size(), id);
-        return new ResponseEntity<List<Payment>>(list, HttpStatus.OK);
+        logger.info("It was found {} payments for payeeid {1}", list.size(), id);
+        return new ResponseEntity<List<FailedPayment>>(list, HttpStatus.OK);
     }
 
     /**
-     * getPaymentsByPayerID - find all payments performed by specific payer
+     * getPaymentsByPayerID - find all failed payments performed by specific payer
      * @param id of payer
      * @return list of payments performed by the payer
      */
     @GetMapping("payment/payer/{id}")
     public ResponseEntity<?> getPaymentsByPayerId(@PathVariable("id") String id) {
-        List<Payment> list = paymentService.getAllPaymentsByPayerId(id);
+        List<FailedPayment> list = paymentService.getAllPaymentsByPayerId(id);
         if(list == null) {
             logger.warn("No payments for payerid {} was found", id);
             return new ResponseEntity<>("no payment for payer found", HttpStatus.NOT_FOUND);
         }
-        logger.info("It was found {} payments for payerid {1}", list.size(), id);
-        return new ResponseEntity<List<Payment>>(list, HttpStatus.OK);
+        logger.info("It was found {} payments for payerid {}", list.size(), id);
+        return new ResponseEntity<List<FailedPayment>>(list, HttpStatus.OK);
     }
 }

@@ -53,14 +53,22 @@ public class PaymentServerIT {
 
 		HttpEntity<String> entity = new HttpEntity<String>(null, headers);
 
-		//TODO: define payment
-		Payment payment = new Payment();
+		Payment payment = new Payment("1u24a8t5-5555-4321-93b6-6efee67dk823","USD",(float)4.2, "1u24a8t5-5555-4321-93b6-6efee67dk823","1u24a8t5-5555-4321-93b6-6efee67dk823","aaa","12345");
 
 		ResponseEntity<String> response = restTemplate.exchange(
 				createURLWithPort("/payment/" + payment.getPaymentid()),
 				HttpMethod.GET, entity, String.class);
 
-		String expected = "{id:Course1,name:Spring,description:10Steps}";
+		String expected = "{\n" +
+				"        \"paymentid\": \"1u24a8t5-5555-4321-93b6-6efee67dk823\",\n" +
+				"        \"payerid\": \"1u24a8t5-5555-4321-93b6-6efee67dk823\",\n" +
+				"        \"payeeid\": \"1u24a8t5-5555-4321-93b6-6efee67dk823\",\n" +
+				"        \"paymentmethodid\": \"1u24a8t5-5555-4321-93b6-6efee67dk823\",\n" +
+				"        \"amount\": 4.2,\n" +
+				"        \"currency\": \"USD\",\n" +
+				"        \"paymentdescription\": \"aaa\",\n" +
+				"        \"paymentnumber\": \"12345\"\n" +
+				"    }";
 
 		JSONAssert.assertEquals(expected, response.getBody(), false);
 	}
@@ -68,13 +76,13 @@ public class PaymentServerIT {
 	@Test
 	public void addPayment() {
 
-	    //TODO: define the payment
-		Payment payment = new Payment();
+		Payment payment = new Payment("1u24a8t5-5555-4321-93b6-6efee67dk823","USD",(float)4.2, "1u24a8t5-5555-4321-93b6-6efee67dk823","1u24a8t5-5555-4321-93b6-6efee67dk823","aaa","12345");
+
 		HttpEntity<Payment> entity = new HttpEntity<Payment>(payment, headers);
 
-		ResponseEntity<String> response = restTemplate.exchange(
+		ResponseEntity<Payment> response = restTemplate.exchange(
 				createURLWithPort("/payment/add"),
-				HttpMethod.POST, entity, String.class);
+				HttpMethod.POST, entity, Payment.class);
 
 		String actual = response.getHeaders().get(HttpHeaders.LOCATION).get(0);
 
