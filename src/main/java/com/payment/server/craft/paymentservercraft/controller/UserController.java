@@ -57,6 +57,24 @@ public class UserController {
     }
 
     /**
+     * check if usermail and userpassword fit
+     * @param mail
+     * @param password
+     * @return user or NOT_FOUND status
+     */
+    @GetMapping("login/{usermail}/{userpassword}")
+    public ResponseEntity<?> login(@PathVariable("usermail") String mail, @PathVariable("userpassword") String password) {
+        User user = userService.authenticateUser(mail, password);
+        if(user == null) {
+            String msg = "Login failed - invalid username or password";
+            logger.warn(msg);
+            return new ResponseEntity<>(msg, HttpStatus.NOT_FOUND);
+        }
+        logger.info("User {} was logged in was found successfully", mail);
+        return new ResponseEntity<User>(user, HttpStatus.OK);
+    }
+
+    /**
      * getAllUsers - find all registered users
      * @return list of users or NOT_FOUND status
      */

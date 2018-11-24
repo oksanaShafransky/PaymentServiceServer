@@ -16,6 +16,7 @@ import static org.junit.Assert.assertTrue;
 
 import java.nio.charset.Charset;
 import java.util.Arrays;
+import java.util.Random;
 
 import org.json.JSONException;
 import org.junit.Before;
@@ -87,8 +88,10 @@ public class PaymentServerIT {
 		String actual = response.getHeaders().get(HttpHeaders.LOCATION).get(0);
 
 		assertTrue(actual.contains("/payment/add"));
-
+		Random randomno = new Random();
+		System.out.println("Next Gaussian value: " + randomno.nextGaussian());
 	}
+
 
 	private String createURLWithPort(String uri) {
 		return "http://localhost:" + port + uri;
